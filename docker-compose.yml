@@ -17,7 +17,7 @@ services:
 
 networks:
   caddy_net:
-    external: true  # сеть должна быть создана заранее: docker network create caddy_net
+    external: true  # сеть должна быть создана заранее: docker network create caddy_net.
 
 volumes:
   caddy_data:
