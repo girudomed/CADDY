@@ -1,0 +1,13 @@
+# qrbot
+qr.girumed.ru {
+    reverse_proxy qrbot:8080
+    encode zstd gzip
+    @health path /health
+    respond @health 200
+}
+
+# n8n
+n8n.girumed.ru {
+    reverse_proxy n8n_nginx:5678
+    encode zstd gzip
+}

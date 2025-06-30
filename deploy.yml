@@ -1,0 +1,67 @@
+name: Deploy Caddy
+
+on:
+  push:
+    branches: [main]
+
+concurrency:
+  group: deploy-caddy-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout source
+      uses: actions/checkout@v4.1.2
+
+    - name: Deploy Caddy via SSH
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host:         ${{ secrets.SERVER_HOST }}
+        username:     ${{ secrets.SERVER_USER }}
+        key:          ${{ secrets.SSH_KEY }}
+        port:         ${{ secrets.SERVER_PORT || '22' }}
+        fingerprint:  ${{ secrets.SERVER_FINGERPRINT }}
+
+        script: |
+          set -Eeuo pipefail
+
+          PROJECT_DIR="$HOME/caddy-deploy"
+          REPO_URL="https://github.com/${{ github.repository }}"
+
+          echo "== Клонирование / обновление репозитория =="
+          if [[ ! -d "$PROJECT_DIR/.git" ]]; then
+            git clone "$REPO_URL" "$PROJECT_DIR"
+          fi
+          cd "$PROJECT_DIR"
+          git fetch origin main --tags
+
+          # стоп-кран, если на сервере что-то меняли вручную
+          if ! git diff-index --quiet HEAD; then
+            echo "::error::Есть непушёные изменения на сервере — деплой отменён."
+            git status -s
+            exit 1
+          fi
+
+          git merge --ff-only origin/main
+
+          echo "== Проверяем наличие Caddyfile =="
+          [[ -f Caddyfile ]] || { echo "::error::Caddyfile отсутствует"; exit 1; }
+
+          echo "== Проверяем/создаём сеть caddy_net =="
+          docker network inspect caddy_net >/dev/null 2>&1 || \
+            docker network create caddy_net
+
+          echo "== Останавливаем текущий Caddy =="
+          docker compose down || true
+
+          echo "== Тянем образ Caddy =="
+          docker compose pull caddy --ignore-pull-failures || true
+
+          echo "== Запускаем Caddy =="
+          docker compose up -d --remove-orphans
+
+          echo "== Чистим dangling-образы старше 24 ч =="
+          docker image prune -af --filter "until=24h" || true
