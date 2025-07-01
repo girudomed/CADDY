@@ -1,3 +1,4 @@
+#Caddyfile
 # qrbot
 qr.girumed.ru {
     reverse_proxy qrbot:8080
@@ -7,7 +8,7 @@ qr.girumed.ru {
 }
 
 # n8n
-n8n.girumed.ru {
-    reverse_proxy n8n_nginx:5678
+n8n.portalgm.ru {
+    reverse_proxy n8n_n8n_1:5678
     encode zstd gzip
 }
