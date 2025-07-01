@@ -1,6 +1,9 @@
 #Caddyfile
 # qrbot
 qr.girumed.ru {
+    handle_path /.well-known/acme-challenge/* {
+        respond "OK"
+    }
     reverse_proxy qrbot:8080
     encode zstd gzip
     @health path /health
