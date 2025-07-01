@@ -1,12 +1,5 @@
-{
+; File: Caddyfile
     # Только HTTP-01, не пытаться через ALPN/tls-alpn-01
-    servers {
-        automatic_https {
-            disable_tls_alpn_challenge
-        }
-    }
-}
-
 # ── QR-BOT ───────────────────────────────────────────────────────
 qr.girumed.ru {
     @health path /health
