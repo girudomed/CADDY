@@ -1,23 +1,23 @@
-# Caddyfile
+{
+    # Только HTTP-01, не пытаться через ALPN/tls-alpn-01
+    servers {
+        automatic_https {
+            disable_tls_alpn_challenge
+        }
+    }
+}
 
 # ── QR-BOT ───────────────────────────────────────────────────────
 qr.girumed.ru {
-    # health-check
     @health path /health
     respond @health 200
 
-    # прокси на ваше приложение
     reverse_proxy qrbot:8080
-
-    # сжатие
     encode zstd gzip
 }
 
 # ── n8n ─────────────────────────────────────────────────────────
 n8n.portalgm.ru {
-    # прокси на n8n
     reverse_proxy n8n_n8n_1:5678
-
-    # сжатие
     encode zstd gzip
 }
