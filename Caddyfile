@@ -2,7 +2,7 @@ qr.girumed.ru {
     @health path /health
     respond @health 200
 
-    reverse_proxy qrbot_almaz:8080
+    reverse_proxy qrbot_web:8080
     encode zstd gzip
 }
 
