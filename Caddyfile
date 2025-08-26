@@ -1,12 +1,48 @@
-qr.girumed.ru {
-    @health path /health
-    respond @health 200
+{
+  # Глобальные таймауты серверов Caddy (клиент <-> Caddy)
+  servers {
+    timeouts {
+      read_header 30s
+      read        12m
+      write       12m
+      idle        12m
+    }
+  }
+}
 
-    reverse_proxy qrbot_web:8080
-    encode zstd gzip
+qr.girumed.ru {
+  @health path /health
+  respond @health 200
+
+  encode zstd gzip
+
+  reverse_proxy qrbot_web:8080 {
+    # Таймауты прокси (Caddy <-> приложение)
+    transport http {
+      dial_timeout  30s
+      read_timeout  12m
+      write_timeout 12m
+      keepalive     90s
+    }
+    # Полезные проксируемые заголовки
+    header_up   Host {host}
+    header_up   X-Forwarded-Proto {scheme}
+    header_up   X-Forwarded-For {remote}
+  }
 }
 
 n8n.portalgm.ru {
-    reverse_proxy n8n_n8n_1:5678
-    encode zstd gzip
+  encode zstd gzip
+
+  reverse_proxy n8n_n8n_1:5678 {
+    transport http {
+      dial_timeout  30s
+      read_timeout  12m
+      write_timeout 12m
+      keepalive     90s
+    }
+    header_up   Host {host}
+    header_up   X-Forwarded-Proto {scheme}
+    header_up   X-Forwarded-For {remote}
+  }
 }
