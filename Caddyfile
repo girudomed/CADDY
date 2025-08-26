@@ -1,37 +1,35 @@
 {
-  # Глобальные настройки HTTP-серверов (клиент ↔ Caddy)
+  # Глобальные настройки (клиент ↔ Caddy)
   servers {
     timeouts {
-      read_header 30s   # ждать заголовки клиента
-      read_body   12m   # читать тело запроса клиента
-      write       12m   # отправка ответа клиенту
-      idle        12m   # неактивность соединения клиент ↔ Caddy
+      read_header 30s
+      read_body   12m
+      write       12m
+      idle        12m
     }
   }
 }
 
 qr.girumed.ru {
-  @health path /health
+  # Healthchecks, отвечает сам Caddy
+  @health path /health /healthz
   respond @health 200
 
   encode zstd gzip
 
   reverse_proxy qrbot_web:8080 {
-    # Таймауты к бэкенду (Caddy ↔ приложение)
     transport http {
-      dial_timeout            30s   # соединиться с апстримом
-      response_header_timeout 12m   # ждать первые заголовки ответа
-      # (прочие read/write/keepalive тут НЕ поддерживаются и убраны)
+      dial_timeout            30s
+      response_header_timeout 12m
     }
-
-    # Проксируемые заголовки
-    header_up X-Forwarded-Proto {scheme}
-    header_up X-Forwarded-For   {remote}
-    # Host по умолчанию пробрасывается как входящий {host}
   }
 }
 
 n8n.portalgm.ru {
+  # Healthchecks, отвечает сам Caddy
+  @health path /health /healthz
+  respond @health 200
+
   encode zstd gzip
 
   reverse_proxy n8n_n8n_1:5678 {
@@ -39,8 +37,5 @@ n8n.portalgm.ru {
       dial_timeout            30s
       response_header_timeout 12m
     }
-
-    header_up X-Forwarded-Proto {scheme}
-    header_up X-Forwarded-For   {remote}
   }
 }
