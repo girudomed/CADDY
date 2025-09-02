@@ -26,27 +26,21 @@ qr.girumed.ru {
 }
 
 n8n.portalgm.ru {
-  # health
+  # Healthchecks, отвечает сам Caddy
   @health path /health /healthz
   respond @health 200
 
   encode zstd gzip
 
-  # несколько upstream (если один из имён не резолвится — второй может сработать)
-  reverse_proxy http://n8n_n8n_1:5678 http://n8n:5678 {
+  # достаточно одного апстрима — docker DNS: "n8n" (сервис compose)
+  # (если очень хочешь fallback — можно добавить n8n_n8n_1:5678 вторым адресом)
+  reverse_proxy n8n:5678 {
     transport http {
       dial_timeout            30s
       response_header_timeout 12m
     }
-
-    # передаём нужные заголовки вверх
-    header_up Host {host}
-    header_up X-Real-IP {remote_host}
-    header_up X-Forwarded-For {remote_host}
-    header_up X-Forwarded-Proto {scheme}
-    header_up X-Forwarded-Host {host}
-
-    # буфер/флаш для streaming/websocket (опционально)
-    flush_interval -1
+    # ВАЖНО: Caddy сам проставляет Host, X-Forwarded-For, X-Forwarded-Proto, X-Forwarded-Host.
+    # Доп. header_up не нужны (и иногда только мешают).
+    # WebSocket поддерживается автоматически, flush_interval не требуется.
   }
-}}
+}
