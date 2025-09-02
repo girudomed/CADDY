@@ -26,32 +26,16 @@ qr.girumed.ru {
 }
 
 n8n.portalgm.ru {
-  # Локальный health для внешних чеков
+  # Healthcheck для внешних мониторингов
   @health path /health /healthz
   respond @health 200
 
   encode zstd gzip
 
-  # Два апстрима: сначала сервис по docker-DNS "n8n",
-  # затем явное имя контейнера как запасной вариант
-  reverse_proxy n8n:5678 n8n_n8n_1:5678 {
-    # Активные health-checks (проверяем корень — там всегда 200 у n8n)
-    health_uri /
-    health_interval 10s
-    health_timeout  2s
-    health_passes   1       # сколько успешных проверок, чтобы признать healthy
-    health_fails    2       # сколько неудачных подряд, чтобы признать unhealthy
-
-    # Политика: брать первый доступный (true failover)
-    lb_policy first
-
-    # Транспорт/таймауты до апстримов
+  reverse_proxy n8n:5678 {
     transport http {
       dial_timeout            30s
       response_header_timeout 12m
     }
-
-    # Доп. заголовки обычно не нужны — Caddy сам корректно проксирует;
-    # при необходимости их можно добавить header_up, но по умолчанию не требуется.  ← см. доку reverse_proxy/Headers  [oai_citation:2‡Caddy Web Server](https://caddyserver.com/docs/caddyfile/directives/reverse_proxy)
   }
 }
