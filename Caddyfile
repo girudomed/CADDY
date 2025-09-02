@@ -26,21 +26,32 @@ qr.girumed.ru {
 }
 
 n8n.portalgm.ru {
-  # Healthchecks, отвечает сам Caddy
+  # Локальный health для внешних чеков
   @health path /health /healthz
   respond @health 200
 
   encode zstd gzip
 
-  # достаточно одного апстрима — docker DNS: "n8n" (сервис compose)
-  # (если очень хочешь fallback — можно добавить n8n_n8n_1:5678 вторым адресом)
-  reverse_proxy n8n:5678 {
+  # Два апстрима: сначала сервис по docker-DNS "n8n",
+  # затем явное имя контейнера как запасной вариант
+  reverse_proxy n8n:5678 n8n_n8n_1:5678 {
+    # Активные health-checks (проверяем корень — там всегда 200 у n8n)
+    health_uri /
+    health_interval 10s
+    health_timeout  2s
+    health_passes   1       # сколько успешных проверок, чтобы признать healthy
+    health_fails    2       # сколько неудачных подряд, чтобы признать unhealthy
+
+    # Политика: брать первый доступный (true failover)
+    lb_policy first
+
+    # Транспорт/таймауты до апстримов
     transport http {
       dial_timeout            30s
       response_header_timeout 12m
     }
-    # ВАЖНО: Caddy сам проставляет Host, X-Forwarded-For, X-Forwarded-Proto, X-Forwarded-Host.
-    # Доп. header_up не нужны (и иногда только мешают).
-    # WebSocket поддерживается автоматически, flush_interval не требуется.
+
+    # Доп. заголовки обычно не нужны — Caddy сам корректно проксирует;
+    # при необходимости их можно добавить header_up, но по умолчанию не требуется.  ← см. доку reverse_proxy/Headers  [oai_citation:2‡Caddy Web Server](https://caddyserver.com/docs/caddyfile/directives/reverse_proxy)
   }
 }
