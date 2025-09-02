@@ -26,16 +26,17 @@ qr.girumed.ru {
 }
 
 n8n.portalgm.ru {
-  # Healthcheck для внешних мониторингов
-  @health path /health /healthz
-  respond @health 200
-
   encode zstd gzip
 
-  reverse_proxy n8n:5678 {
+  reverse_proxy n8n_n8n_1:5678 {
     transport http {
-      dial_timeout            30s
-      response_header_timeout 12m
+      dial_timeout  30s
+      read_timeout  12m
+      write_timeout 12m
+      keepalive     90s
     }
+    header_up   Host {host}
+    header_up   X-Forwarded-Proto {scheme}
+    header_up   X-Forwarded-For {remote}
   }
 }
