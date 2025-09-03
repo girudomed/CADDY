@@ -28,22 +28,29 @@ qr.girumed.ru {
 n8n.portalgm.ru {
     encode zstd gzip
 
-    # Health: пусть Caddy отвечает 200 на /health и /healthz
-    # (n8n в вашей сборке возвращает 404 на /health — это устраняет false-positive)
-    @health path /health /healthz
-    respond @health 200
-
-    # Proxy всех остальных запросов (включая websockets) на сервис n8n
-    reverse_proxy n8n:5678 {
+    # /health проксируем на корень n8n, чтобы health отражал реальное состояние приложения
+    @health {
+        path /health /healthz
+    }
+    reverse_proxy @health http://n8n:5678/ {
         transport http {
-            dial_timeout            30s
-            response_header_timeout 12m
-            keepalive               90s
+            dial_timeout  30s
+            read_timeout  12m
+            write_timeout 12m
+            keepalive     90s
         }
         header_up Host {host}
-        header_up X-Real-IP {remote_host}
-        header_up X-Forwarded-For {remote_host}
-        header_up X-Forwarded-Proto {scheme}
+    }
+
+    # основной прокси для UI/API
+    reverse_proxy http://n8n:5678 {
+        transport http {
+            dial_timeout  30s
+            read_timeout  12m
+            write_timeout 12m
+            keepalive     90s
+        }
+        header_up Host {host}
     }
 
     log {
