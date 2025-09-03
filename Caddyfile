@@ -28,28 +28,20 @@ qr.girumed.ru {
 n8n.portalgm.ru {
     encode zstd gzip
 
-    # /health проксируем на корень n8n, чтобы health отражал реальное состояние приложения
-    @health {
-        path /health /healthz
-    }
-    reverse_proxy @health http://n8n:5678/ {
-        transport http {
-            dial_timeout  30s
-            read_timeout  12m
-            write_timeout 12m
-            keepalive     90s
-        }
-        header_up Host {host}
-    }
+    # /health и /healthz -> переписываем путь на /
+    @health path /health /healthz
+    rewrite @health /
 
-    # основной прокси для UI/API
+    # единый прокси для всего (после rewrite /health уходит как /)
     reverse_proxy http://n8n:5678 {
         transport http {
-            dial_timeout  30s
-            read_timeout  12m
-            write_timeout 12m
-            keepalive     90s
+            dial_timeout              30s
+            response_header_timeout   12m
+            read_timeout              12m
+            write_timeout             12m
+            keepalive                 90s
         }
+        # не обязательно, но ок — сохранить Host
         header_up Host {host}
     }
 
