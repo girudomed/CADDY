@@ -28,24 +28,18 @@ qr.girumed.ru {
 n8n.portalgm.ru {
     encode zstd gzip
 
-    # Отдаём реальный health API напрямую
-    @apihealth path /rest/health
-    reverse_proxy @apihealth http://n8n:5678
-
-    # Синтетические health-роуты ведём на API health
-    @health path /health /healthz
-    rewrite @health /rest/health
-
-    # Остальной трафик (UI, API, WS)
     reverse_proxy http://n8n:5678 {
         transport http {
-            dial_timeout            30s
-            response_header_timeout 12m
-            read_timeout            12m
-            write_timeout           12m
-            keepalive               90s
+            dial_timeout              30s
+            response_header_timeout   12m
+            read_timeout              12m
+            write_timeout             12m
+            keepalive                 90s
         }
-        header_up Host {host}  # опционально
+        header_up Host {host}
+        # Если когда-либо появятся CORS-ошибки для API-запросов из браузера — добавь эти строки:
+        # header_up Access-Control-Allow-Origin *
+        # header_up Access-Control-Allow-Credentials true
     }
 
     log {
