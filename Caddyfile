@@ -46,3 +46,27 @@ n8n.portalgm.ru {
         output file /var/log/caddy/n8n_access.log
     }
 }
+
+mango.portalgm.ru {
+    @health path /health /healthz
+    respond @health 200
+
+    encode zstd gzip
+
+    # если FastAPI слушает на этом же сервере:
+    reverse_proxy http://127.0.0.1:8000 {
+        transport http {
+            dial_timeout            30s
+            response_header_timeout 12m
+            read_timeout            12m
+            write_timeout           12m
+            keepalive               90s
+        }
+        header_up Host {host}
+        header_up X-Forwarded-Proto {scheme}
+    }
+
+    log {
+        output file /var/log/caddy/mango_access.log
+    }
+}
