@@ -45,7 +45,7 @@ jobs:
             exit 1
           fi
 
-          git merge --ff-only origin/main
+          git reset --hard origin/main
 
           echo "== Проверяем наличие Caddyfile =="
           [[ -f Caddyfile ]] || { echo "::error::Caddyfile отсутствует"; exit 1; }
