@@ -1,5 +1,5 @@
 {
-  # Глобальные настройки (клиент ↔ Caddy)
+  # Глобальные настройки(клиент ↔ Caddy)
   servers {
     timeouts {
       read_header 30s
