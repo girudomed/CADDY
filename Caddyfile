@@ -10,6 +10,13 @@
   }
 }
 
+health.portalgm.ru {
+    @health path /health
+    respond @health 200 "OK"
+
+    respond 404
+}
+
 qr.girumed.ru {
   # Healthchecks, отвечает сам Caddy
   @health path /health /healthz
