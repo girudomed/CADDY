@@ -11,16 +11,8 @@
 }
 
 health.portalgm.ru {
-
-    @health {
-        path /health
-    }
-
-    respond @health {
-        status 200
-        body "OK"
-    }
-
+    @health path /health
+    respond @health 200
     respond 404
 }
 
