@@ -11,8 +11,8 @@
 }
 
 health.portalgm.ru {
-    @health path /health
-    respond @health 200
+    respond /health 200
+    respond /host 200
     respond 404
 }
 
